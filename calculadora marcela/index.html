@@ -11,10 +11,11 @@
         .input-group { margin-bottom: 1.5rem; }
         .result-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
         .total-box { background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+        /* Estilo para resaltar el total final */
+        .grand-total { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; }
     </style>
 </head>
 <body class="p-4 md:p-10">
-
     <div class="max-w-2xl mx-auto card p-6 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-2xl font-bold text-blue-900">Calculadora de Importación Argentina 2026</h1>
@@ -25,11 +26,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="input-group">
                 <label class="block text-sm font-medium text-gray-700 font-bold mb-1">Valor del Producto (FOB USD)</label>
-                <input type="number" id="fob" placeholder="Ej: 100" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="number" id="fob" placeholder="Ej: 100" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" min="0" step="0.01">
             </div>
             <div class="input-group">
                 <label class="block text-sm font-medium text-gray-700 font-bold mb-1">Flete y Seguro (USD)</label>
-                <input type="number" id="shipping" placeholder="Ej: 20" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="number" id="shipping" placeholder="Ej: 20" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" min="0" step="0.01">
             </div>
         </div>
 
@@ -42,23 +43,26 @@
             <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Desglose de Impuestos (Estimado AFIP)</h3>
             
             <div class="result-row"><span>Valor CIF (Base Imponible)</span> <span id="res-cif" class="font-semibold"></span></div>
-            <div class="result-row"><span>Derechos de Imp. (20%)</span> <span id="res-derechos" class="text-red-500"></span></div>
-            <div class="result-row"><span>Tasa Estadística (3%)</span> <span id="res-tasa" class="text-red-500"></span></div>
-            <div class="result-row"><span>IVA (21% + 20%)</span> <span id="res-iva" class="text-red-500"></span></div>
+            <div class="result-row"><span>Derechos de Importación (6%)</span> <span id="res-derechos" class="text-red-500"></span></div>
+            <div class="result-row"><span>Tasa Estadística (0.5%)</span> <span id="res-tasa" class="text-red-500"></span></div>
+            <div class="result-row"><span>IVA (21%)</span> <span id="res-iva" class="text-red-500"></span></div>
+            <div class="result-row"><span>Percepción IVA (20%)</span> <span id="res-percep-iva" class="text-red-500"></span></div>
             <div class="result-row"><span>Percepción Ganancias (6%)</span> <span id="res-ganancias" class="text-red-500"></span></div>
-            <div class="result-row text-blue-600 font-medium"><span>Percepción IIBB (3%)</span> <span id="res-iibb"></span></div>
+            <div class="result-row"><span>Percepción IIBB (3%)</span> <span id="res-iibb" class="text-red-500"></span></div>
             
-            <div class="total-box text-center">
-                <span class="block text-blue-800 text-sm font-bold uppercase">Total a pagar en Aduana + Producto</span>
-                <span id="res-total" class="text-3xl font-black text-blue-600"></span>
-                <p class="text-xs text-gray-500 mt-2">*Cálculo basado en régimen general. Los valores pueden variar según NCM.</p>
+            <!-- Total Final Resaltado -->
+            <div class="total-box text-center grand-total mt-6">
+                <span class="block text-white text-lg font-bold uppercase">Total a Pagar en Aduana + Producto</span>
+                <span id="res-total" class="text-4xl font-black text-white my-2"></span>
+                <p class="text-xs text-blue-100 mt-2">*Cálculo basado en régimen general. Los valores pueden variar según NCM y jurisdicción.</p>
             </div>
 
             <!-- BOTÓN DE CONTACTO -->
             <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                 <p class="text-sm text-yellow-800 font-medium">¿Querés que un experto gestione tu importación?</p>
-                <a href="https://wa.me/TU_NUMERO" class="mt-3 inline-block bg-green-500 text-white px-6 py-2 rounded-full font-bold hover:bg-green-600 transition">
-                    Hablar con un Asesor Aduanero
+                <!-- REEMPLAZA 'TU_NUMERO' con tu número real en formato 5491112345678 -->
+                <a href="https://wa.me/TU_NUMERO?text=Hola,%20quiero%20consultar%20sobre%20una%20importación" target="_blank" class="mt-3 inline-block bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full font-bold transition shadow-md">
+                    📱 Hablar con un Asesor Aduanero
                 </a>
             </div>
         </div>
@@ -66,38 +70,63 @@
 
     <script>
         function calcular() {
+            // Obtener valores
             const fob = parseFloat(document.getElementById('fob').value) || 0;
             const shipping = parseFloat(document.getElementById('shipping').value) || 0;
 
+            // Validación básica
             if (fob <= 0) {
-                alert("Por favor, ingresa un valor de producto válido.");
+                alert("Por favor, ingresa un valor de producto válido (mayor a 0).");
                 return;
             }
 
-            // Lógica Matemática Real
+            // --- CÁLCULOS CORREGIDOS (Lógica Aduanera Real) ---
+            // 1. Base Imponible (CIF)
             const cif = fob + shipping;
-            const derechos = cif * 0.20;
-            const tasaEst = cif * 0.03;
-            const baseImpuestos = cif + derechos + tasaEst;
             
-            const ivaTotal = baseImpuestos * 0.41; // 21% + 20%
-            const ganancias = baseImpuestos * 0.06;
-            const iibb = baseImpuestos * 0.03;
+            // 2. Impuestos sobre CIF
+            const derechosImportacion = cif * 0.06;       // 6%
+            const tasaEstadistica = cif * 0.005;          // 0.5%
+            
+            // 3. Base para percepciones (CIF + Derechos + Tasa Estadística)
+            const basePercepciones = cif + derechosImportacion + tasaEstadistica;
+            
+            // 4. Percepciones sobre la base anterior
+            const iva = basePercepciones * 0.21;          // IVA 21%
+            const percepcionIva = basePercepciones * 0.20; // Percepción IVA 20%
+            const percepcionGanancias = basePercepciones * 0.06; // Ganancias 6%
+            const percepcionIIBB = basePercepciones * 0.03;     // IIBB 3%
 
-            const totalFinal = baseImpuestos + ivaTotal + ganancias + iibb;
+            // 5. TOTAL FINAL (Suma de todos los conceptos)
+            const totalFinal = cif + derechosImportacion + tasaEstadistica + iva + percepcionIva + percepcionGanancias + percepcionIIBB;
 
-            // Mostrar Resultados
-            document.getElementById('res-cif').innerText = `USD ${cif.toFixed(2)}`;
-            document.getElementById('res-derechos').innerText = `USD ${derechos.toFixed(2)}`;
-            document.getElementById('res-tasa').innerText = `USD ${tasaEst.toFixed(2)}`;
-            document.getElementById('res-iva').innerText = `USD ${ivaTotal.toFixed(2)}`;
-            document.getElementById('res-ganancias').innerText = `USD ${ganancias.toFixed(2)}`;
-            document.getElementById('res-iibb').innerText = `USD ${iibb.toFixed(2)}`;
-            document.getElementById('res-total').innerText = `USD ${totalFinal.toFixed(2)}`;
+            // --- MOSTRAR RESULTADOS ---
+            // Formatear como moneda
+            const formatear = (valor) => `USD ${valor.toFixed(2)}`;
+            
+            document.getElementById('res-cif').textContent = formatear(cif);
+            document.getElementById('res-derechos').textContent = formatear(derechosImportacion);
+            document.getElementById('res-tasa').textContent = formatear(tasaEstadistica);
+            document.getElementById('res-iva').textContent = formatear(iva);
+            document.getElementById('res-percep-iva').textContent = formatear(percepcionIva);
+            document.getElementById('res-ganancias').textContent = formatear(percepcionGanancias);
+            document.getElementById('res-iibb').textContent = formatear(percepcionIIBB);
+            document.getElementById('res-total').textContent = formatear(totalFinal);
 
-            // Quitar el 'hidden' para que se vea el cuadro
+            // Mostrar la sección de resultados
             document.getElementById('resultados').classList.remove('hidden');
+            
+            // Desplazarse suavemente hacia los resultados
+            document.getElementById('resultados').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+        
+        // Permitir calcular presionando "Enter" en cualquier campo
+        document.getElementById('fob').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calcular();
+        });
+        document.getElementById('shipping').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calcular();
+        });
     </script>
 </body>
 </html>
